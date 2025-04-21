@@ -3,9 +3,9 @@
 
 🌎 **Gemini Proxy** 是一个轻量级的流式 HTTP 代理，专为与 [Google Gemini](https://ai.google.dev/) 等 AI 服务对接设计。它支持将请求通过本地或指定的中间代理(socks5/http)转发，安全灵活，部署简单。适合需要科学上网或企业安全隔离场景。
 
-❓ **Gemini Proxy 与 [One API](https://github.com/songquanpeng/one-api) 等代理有何区别？** One API 等服务虽然同样可以设置网络代理，但是为了统一管理，通常会将Gemini等其他AI服务转换为OpenAI兼容形式，缺失了一些功能。此外，Token用量记录等功能也增加了一些复杂性。
+❓ **Gemini Proxy 与 [One API](https://github.com/songquanpeng/one-api) 等代理有何区别？** One API 等服务虽然同样可以设置网络代理，但是其主要目的是为了统一管理多个API，因此通常会将 Gemini 等其他 AI 服务转换为 OpenAI 兼容形式，因此有一些功能（例如思考过程）在某些客户端中可能使用异常。此外，Token 用量记录和用户管理等功能也增加了一些部署和使用复杂性。而本项目只是一个轻量级的代理，更适合原生API开发和使用，同时复杂度更低。
 
-🔥 **实现方式：**
+🔥 **应用场景：**
 <div align="center">
   <img src="./docs/framework.svg" alt="实现架构" width="300">
 </div>
@@ -16,15 +16,14 @@
 
 - 🚀 **流式转发**：支持大模型流式响应，极低延迟，体验丝滑。
 - 🛡️ **代理支持**：可配置 socks5 或 http 中间代理，轻松绕过网络限制。
-- 🏠 **自定义目标**：不仅限于 Gemini API，任意指定目标服务。
+- 🏠 **自定义目标**：不仅限于 Gemini API，可任意指定目标服务。
 - 🐳 **Docker 一键部署**：开箱即用，适合服务器/本地快速部署。
-- 📜 **详细日志**：内置日志，方便排查问题和监控流量。
 
 ---
 
 ## 快速开始
 
-### 1. 拉取或构建镜像
+### 1. 构建镜像
 
 你可以直接使用 Dockerfile 构建镜像：
 
@@ -70,7 +69,7 @@ python main.py
 
 ## 使用说明
 
-项目运行后，所有请求都会经过你的代理被转发到 `TARGET_URL`（默认为 Gemini API），并支持流式响应。你可以像这样使用：
+项目运行后，所有请求都会经过你的代理被转发到 `TARGET_URL`（默认为 Gemini API），并支持流式响应。你可以[像这样使用](https://ai.google.dev/gemini-api/docs/quickstart)：
 
 ```bash
 curl "http://localhost:8080/v1beta/models/gemini-2.0-flash:generateContent?key=YOUR_API_KEY" \
@@ -109,6 +108,7 @@ curl "http://localhost:8080/v1beta/openai/chat/completions" \
 - 支持 GET/POST/PUT/DELETE/PATCH 等常见 HTTP 方法。
 - 响应为流式（chunked），适合大模型长文本输出。
 - 所有请求头（如 Authorization）和请求体会被完整转发。
+- 你还可以通过反代等方式将服务绑定到你的域名，以实现更便捷的接入。
 
 ---
 
@@ -118,33 +118,6 @@ curl "http://localhost:8080/v1beta/openai/chat/completions" \
 | ----------- | ----------------------------------------------- | --------------------------- |
 | PROXY_URL   | 中间代理地址，支持 http 或 socks5 格式           | http://1.2.3.4:7890         |
 | TARGET_URL  | 目标 API 地址，默认 Google Gemini API            | https://generativelanguage.googleapis.com |
-
----
-
-## 进阶用法
-
-### 1. 仅作为本地端口转发（无中间代理）
-
-如部署在海外 VPS，可不设置 `PROXY_URL`，直接作为本地转发：
-
-```yaml
-environment:
-  # - PROXY_URL=    # 留空即可
-```
-
-### 2. 支持 socks5 代理
-
-```yaml
-environment:
-  - PROXY_URL=socks5://127.0.0.1:1080
-```
-
-### 3. 转发到自定义 API
-
-```yaml
-environment:
-  - TARGET_URL=https://your.custom.api.com
-```
 
 ---
 
@@ -166,16 +139,6 @@ environment:
 - 使用 Flask 实现 HTTP 反向代理。
 - 利用 `requests` 的 `stream=True`，实现 chunked 流式转发，极大提升大模型响应体验。
 - 自动剥离/透传大部分 HTTP 头，兼容性强。
-
----
-
-## 生产部署建议
-
-- 推荐使用 Gunicorn 等 WSGI 服务器生产部署：
-  ```bash
-  gunicorn -w 4 -b 0.0.0.0:42082 app:app --timeout 120
-  ```
-- 结合 Docker Compose，支持热更新、自动重启。
 
 ---
 
