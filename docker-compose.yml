@@ -1,0 +1,16 @@
+services:
+  gemini-proxy:
+    container_name: gemini-proxy
+    image: gemini-proxy
+    restart: always
+    network_mode: bridge
+    ports:
+      # 监听端口
+      - 8080:8080
+    environment:
+      # 支持socks5代理
+      # - PROXY_URL=socks5://192.168.0.123:7890
+      # 支持http代理
+      - PROXY_URL=http://192.168.0.123:7890
+      # 如果需要代理其他目标可以进行修改
+      # - TARGET_URL=https://generativelanguage.googleapis.com
